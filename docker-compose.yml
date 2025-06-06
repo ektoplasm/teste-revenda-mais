@@ -15,7 +15,7 @@ services:
       - revendamais
     restart: unless-stopped
   php:
-    env_file: ./api/.env
+    env_file: ./api/.env.example
     build:
       dockerfile: ./docker/php/Dockerfile
       context: .
