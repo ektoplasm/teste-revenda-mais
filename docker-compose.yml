@@ -1,0 +1,60 @@
+services:
+  db:
+    image: mysql:8.0
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootroot
+      MYSQL_DATABASE: vendas
+      MYSQL_USER: dbuser
+      MYSQL_PASSWORD: dbpass
+    expose:
+      - 3306
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - revendamais
+    restart: unless-stopped
+  php:
+    env_file: ./api/.env
+    build:
+      dockerfile: ./docker/php/Dockerfile
+      context: .
+    image: php8.4-fpm
+    container_name: php
+    volumes:
+      - ./api:/var/www/html:rw
+    expose:
+      - 9000
+    user: 1000:1000
+    networks:
+      - revendamais
+    restart: unless-stopped
+  server:
+    image: nginx:stable-alpine
+    container_name: nginx
+    volumes:
+      - ./docker/nginx/:/etc/nginx/conf.d/:ro
+    depends_on:
+      - db
+      - memcached
+      - php
+    ports:
+      - 8080:80
+    networks:
+      - revendamais
+    restart: unless-stopped
+  memcached:
+    image: memcached:latest
+    container_name: memcached
+    ports:
+      - 11211:11211
+    networks:
+      - revendamais
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+
+networks:
+  revendamais:
+    driver: bridge
